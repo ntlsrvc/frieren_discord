@@ -98,21 +98,21 @@ def main() -> None:
 
     if last_guid != latest_guid:
         date_text = (
-            latest_date.strftime("%d/%m/%Y %H:%M UTC")
-            if latest_date
-            else "data indisponível"
-        )
+        latest_date.strftime("%d/%m/%Y")
+        if latest_date
+        else "data indisponível"
+    )
 
         description = (
-            f"**Capítulo {chapter_text}**\n"
-            f"Publicado em: {date_text}\n"
+            f"Capítulo {chapter_text}\n"
+            f"Data: {date_text}\n"
             f"Link: {latest_link}"
         )
 
         send_discord_embed(
-            title=f"Novo capítulo de {manga_title}",
+            title="SAIU",
             description=description,
-            color=0x57F287,
+            color=0x57F287
         )
 
         state["last_guid"] = latest_guid
