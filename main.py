@@ -138,7 +138,6 @@ def main() -> None:
     )
 
     send_discord_embed(
-        title="E Frieren saiu do hiato?",
         description=description,
         color=0x9B59B6,
     )
