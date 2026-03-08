@@ -132,7 +132,6 @@ def main() -> None:
         days_text = f"há {elapsed_days} dias"
 
     description = (
-        f"E Frieren saiu do hiato?\n\n"
         f"Não :(\n"
         f"O último capítulo foi o {chapter_text} e saiu {days_text}."
     )
