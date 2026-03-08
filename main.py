@@ -132,8 +132,8 @@ def main() -> None:
         days_text = f"há {elapsed_days} dias"
 
     description = (
-        f"Não :(\n"
-        f"O último capítulo foi o {chapter_text} e saiu {days_text}."
+        f"**Não :(**\n\n"
+        f"**O último capítulo foi o {chapter_text} e saiu {days_text}.**"
     )
 
     send_discord_embed(
