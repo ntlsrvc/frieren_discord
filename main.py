@@ -55,13 +55,23 @@ def days_since(date_value: datetime | None) -> int | None:
     return delta.days
 
 
-def send_discord_message(content: str) -> None:
+def send_discord_embed(title: str, description: str, color: int = 0x9B59B6) -> None:
     if not DISCORD_WEBHOOK_URL:
-        raise ValueError("A variável de ambiente DISCORD_WEBHOOK_URL não foi definida.")
+        raise ValueError("DISCORD_WEBHOOK_URL não definida")
+
+    payload = {
+        "embeds": [
+            {
+                "title": title,
+                "description": description,
+                "color": color,
+            }
+        ]
+    }
 
     response = requests.post(
         DISCORD_WEBHOOK_URL,
-        json={"content": content},
+        json=payload,
         timeout=30,
     )
     response.raise_for_status()
@@ -81,6 +91,7 @@ def main() -> None:
     latest_guid = latest.get("id") or latest.get("guid") or latest_link
     latest_date = parse_entry_date(latest)
     latest_chapter = extract_chapter_number(latest_title)
+    chapter_text = latest_chapter if latest_chapter else latest_title
 
     state = load_state()
     last_guid = state.get("last_guid")
@@ -92,16 +103,17 @@ def main() -> None:
             else "data indisponível"
         )
 
-        chapter_text = f"Capítulo {latest_chapter}" if latest_chapter else latest_title
-
-        message = (
-            f"Novo capítulo de **{manga_title}** disponível.\n"
-            f"**{chapter_text}**\n"
+        description = (
+            f"**Capítulo {chapter_text}**\n"
             f"Publicado em: {date_text}\n"
             f"Link: {latest_link}"
         )
 
-        send_discord_message(message)
+        send_discord_embed(
+            title=f"Novo capítulo de {manga_title}",
+            description=description,
+            color=0x57F287,
+        )
 
         state["last_guid"] = latest_guid
         state["last_title"] = latest_title
@@ -111,8 +123,7 @@ def main() -> None:
         print("Novo capítulo encontrado e notificação enviada.")
         return
 
-    last_pub_date = latest_date
-    elapsed_days = days_since(last_pub_date)
+    elapsed_days = days_since(latest_date)
 
     if elapsed_days is None:
         days_text = "há alguns dias"
@@ -121,12 +132,17 @@ def main() -> None:
     else:
         days_text = f"há {elapsed_days} dias"
 
-    message = (
-        f"Não :(\n"
-        f"O último capítulo foi o {latest_chapter} e saiu {days_text}."
+    description = (
+        "Não :(\n"
+        f"O último capítulo foi o {chapter_text} e saiu {days_text}."
     )
 
-    send_discord_message(message)
+    send_discord_embed(
+        title="E Frieren saiu do hiato?",
+        description=description,
+        color=0x9B59B6,
+    )
+
     print("Nenhum capítulo novo. Mensagem de status enviada.")
 
 
