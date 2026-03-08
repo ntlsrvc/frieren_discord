@@ -55,14 +55,13 @@ def days_since(date_value: datetime | None) -> int | None:
     return delta.days
 
 
-def send_discord_embed(title: str, description: str, color: int = 0x9B59B6) -> None:
+def send_discord_embed(description: str, color: int = 0x9B59B6) -> None:
     if not DISCORD_WEBHOOK_URL:
         raise ValueError("DISCORD_WEBHOOK_URL não definida")
 
     payload = {
         "embeds": [
             {
-                "title": title,
                 "description": description,
                 "color": color,
             }
@@ -85,7 +84,6 @@ def main() -> None:
 
     latest = feed.entries[0]
 
-    manga_title = feed.feed.get("title", "Mangá")
     latest_title = latest.get("title", "Capítulo novo")
     latest_link = latest.get("link", "")
     latest_guid = latest.get("id") or latest.get("guid") or latest_link
@@ -98,19 +96,19 @@ def main() -> None:
 
     if last_guid != latest_guid:
         date_text = (
-        latest_date.strftime("%d/%m/%Y")
-        if latest_date
-        else "data indisponível"
-    )
+            latest_date.strftime("%d/%m/%Y")
+            if latest_date
+            else "data indisponível"
+        )
 
         description = (
+            f"**SAIU**\n\n"
             f"Capítulo {chapter_text}\n"
             f"Data: {date_text}\n"
-            f"Link: {latest_link}"
+            f"{latest_link}"
         )
 
         send_discord_embed(
-            title="SAIU",
             description=description,
             color=0x57F287
         )
@@ -120,6 +118,7 @@ def main() -> None:
         state["last_link"] = latest_link
         state["last_pub_date"] = latest_date.isoformat() if latest_date else None
         save_state(state)
+
         print("Novo capítulo encontrado e notificação enviada.")
         return
 
@@ -133,7 +132,8 @@ def main() -> None:
         days_text = f"há {elapsed_days} dias"
 
     description = (
-        "Não :(\n"
+        f"E Frieren saiu do hiato?\n\n"
+        f"Não :(\n"
         f"O último capítulo foi o {chapter_text} e saiu {days_text}."
     )
 
