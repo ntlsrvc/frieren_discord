@@ -126,9 +126,8 @@ def main() -> None:
     chapter_text = f"capítulo {latest_chapter}" if latest_chapter else latest_title
 
     message = (
-        f"Ainda não saiu capítulo novo de **{manga_title}**.\n"
-        f"O último foi o **{chapter_text}**, publicado {days_text}.\n"
-        f"Link do último capítulo: {latest_link}"
+        f"E Frieren saiu do hiato?\n"
+        f"Não, o último capítulo foi há {elapsed_days} dias."
     )
 
     send_discord_message(message)
