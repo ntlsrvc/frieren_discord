@@ -116,18 +116,14 @@ def main() -> None:
 
     if elapsed_days is None:
         days_text = "há alguns dias"
-    elif elapsed_days == 0:
-        days_text = "hoje"
     elif elapsed_days == 1:
         days_text = "há 1 dia"
     else:
         days_text = f"há {elapsed_days} dias"
 
-    chapter_text = f"capítulo {latest_chapter}" if latest_chapter else latest_title
-
     message = (
-        f"E Frieren saiu do hiato?\n"
-        f"Não, o último capítulo foi há {elapsed_days} dias."
+        f"Não :(\n"
+        f"O último capítulo foi o {latest_chapter} e saiu {days_text}."
     )
 
     send_discord_message(message)
