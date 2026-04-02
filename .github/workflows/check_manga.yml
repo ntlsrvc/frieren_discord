@@ -27,6 +27,7 @@ jobs:
       - name: Executar script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GIPHY_API_KEY: ${{ secrets.GIPHY_API_KEY }}
         run: python main.py
 
       - name: Commit do state.json se houver alteração
