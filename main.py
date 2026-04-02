@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -11,11 +12,24 @@ import requests
 RSS_URL = "https://weebcentral.com/series/01J76XYDGDQERFSK333582BNBZ/rss"
 STATE_FILE = "state.json"
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
+
+GIPHY_QUERIES = [
+    "frieren beyond journey's end",
+    "sousou no frieren",
+    "frieren anime",
+    "frieren gif",
+    "fern frieren",
+    "stark frieren",
+]
+
+MAX_SAVED_GIFS = 200
 
 
 def load_state() -> dict:
     if not os.path.exists(STATE_FILE):
         return {}
+
     with open(STATE_FILE, "r", encoding="utf-8") as file:
         return json.load(file)
 
@@ -55,17 +69,113 @@ def days_since(date_value: datetime | None) -> int | None:
     return delta.days
 
 
-def send_discord_embed(description: str, color: int = 0x9B59B6) -> None:
+def get_used_gif_ids(state: dict) -> list[str]:
+    used_ids = state.get("used_gif_ids", [])
+    if isinstance(used_ids, list):
+        return used_ids
+    return []
+
+
+def save_used_gif_id(state: dict, gif_id: str) -> None:
+    used_ids = get_used_gif_ids(state)
+    used_ids.append(gif_id)
+    state["used_gif_ids"] = used_ids[-MAX_SAVED_GIFS:]
+
+
+def search_giphy(query: str) -> list[dict]:
+    if not GIPHY_API_KEY:
+        raise ValueError("GIPHY_API_KEY não definida")
+
+    response = requests.get(
+        "https://api.giphy.com/v1/gifs/search",
+        params={
+            "api_key": GIPHY_API_KEY,
+            "q": query,
+            "limit": 20,
+            "rating": "pg",
+            "lang": "en",
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    return data.get("data", [])
+
+
+def deduplicate_gifs(results: list[dict]) -> list[dict]:
+    seen = set()
+    unique = []
+
+    for gif in results:
+        gif_id = gif.get("id")
+        if not gif_id or gif_id in seen:
+            continue
+        seen.add(gif_id)
+        unique.append(gif)
+
+    return unique
+
+
+def get_best_gif(gif: dict) -> tuple[str, str]:
+    gif_id = gif.get("id", "")
+    images = gif.get("images", {})
+
+    gif_url = (
+        images.get("original", {}).get("url")
+        or images.get("downsized_large", {}).get("url")
+        or images.get("fixed_height", {}).get("url")
+        or ""
+    )
+
+    return gif_id, gif_url
+
+
+def choose_frieren_gif(state: dict) -> str | None:
+    used_ids = set(get_used_gif_ids(state))
+    all_results = []
+
+    for query in GIPHY_QUERIES:
+        print(f"Buscando GIFs para: {query}")
+        all_results.extend(search_giphy(query))
+
+    unique_results = deduplicate_gifs(all_results)
+    fresh_results = [gif for gif in unique_results if gif.get("id") not in used_ids]
+
+    pool = fresh_results if fresh_results else unique_results
+    if not pool:
+        return None
+
+    chosen_gif = random.choice(pool)
+    gif_id, gif_url = get_best_gif(chosen_gif)
+
+    if not gif_url:
+        return None
+
+    if gif_id:
+        save_used_gif_id(state, gif_id)
+
+    return gif_url
+
+
+def send_discord_embed(
+    description: str,
+    color: int = 0x9B59B6,
+    image_url: str | None = None,
+) -> None:
     if not DISCORD_WEBHOOK_URL:
         raise ValueError("DISCORD_WEBHOOK_URL não definida")
 
+    embed = {
+        "description": description,
+        "color": color,
+    }
+
+    if image_url:
+        embed["image"] = {"url": image_url}
+
     payload = {
-        "embeds": [
-            {
-                "description": description,
-                "color": color,
-            }
-        ]
+        "embeds": [embed]
     }
 
     response = requests.post(
@@ -94,6 +204,8 @@ def main() -> None:
     state = load_state()
     last_guid = state.get("last_guid")
 
+    gif_url = choose_frieren_gif(state)
+
     if last_guid != latest_guid:
         date_text = (
             latest_date.strftime("%d/%m/%Y")
@@ -110,7 +222,8 @@ def main() -> None:
 
         send_discord_embed(
             description=description,
-            color=0x57F287
+            color=0x57F287,
+            image_url=gif_url,
         )
 
         state["last_guid"] = latest_guid
@@ -139,8 +252,10 @@ def main() -> None:
     send_discord_embed(
         description=description,
         color=0x9B59B6,
+        image_url=gif_url,
     )
 
+    save_state(state)
     print("Nenhum capítulo novo. Mensagem de status enviada.")
 
 
