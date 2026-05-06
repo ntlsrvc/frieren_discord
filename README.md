@@ -2,8 +2,6 @@
  
 GitHub Action que verifica se saiu capítulo novo de Frieren e avisa no Discord.
  
-Criado porque Frieren em hiato já virou rotina, então pelo menos a checagem precisava ser automática.
- 
 ## O que faz
  
 - Consulta o RSS da série no WeebCentral
