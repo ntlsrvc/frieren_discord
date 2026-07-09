@@ -18,13 +18,49 @@ GIPHY_QUERIES = [
     "frieren beyond journey's end",
     "sousou no frieren",
     "frieren anime",
-    "frieren gif",
+    "frieren",
     "fern frieren",
     "stark frieren",
 ]
 
+BLOCKED_GIPHY_TERMS = [
+    "67",
+    "cat",
+    "brain rot",
+    "redpill",
+    "chad",
+    "nsfw",
+    "skibidi",
+    "ai generated",
+    "alpha",
+    "sigma",
+]
+
 MAX_SAVED_GIFS = 200
 
+def is_blocked_gif(gif: dict) -> bool:
+    blocked_terms = [term.lower() for term in BLOCKED_GIPHY_TERMS]
+
+    searchable_parts = [
+        gif.get("title", ""),
+        gif.get("slug", ""),
+        gif.get("url", ""),
+        gif.get("source", ""),
+        gif.get("username", ""),
+    ]
+
+    tags = gif.get("tags", [])
+    if isinstance(tags, list):
+        searchable_parts.extend(str(tag) for tag in tags)
+
+    searchable_text = " ".join(searchable_parts).lower()
+
+    for term in blocked_terms:
+        pattern = rf"\b{re.escape(term)}\b"
+        if re.search(pattern, searchable_text, re.IGNORECASE):
+            return True
+
+    return False
 
 def load_state() -> dict:
     if not os.path.exists(STATE_FILE):
@@ -140,9 +176,19 @@ def choose_frieren_gif(state: dict) -> str | None:
         all_results.extend(search_giphy(query))
 
     unique_results = deduplicate_gifs(all_results)
-    fresh_results = [gif for gif in unique_results if gif.get("id") not in used_ids]
 
-    pool = fresh_results if fresh_results else unique_results
+    allowed_results = [
+        gif for gif in unique_results
+        if not is_blocked_gif(gif)
+    ]
+
+    fresh_results = [
+        gif for gif in allowed_results
+        if gif.get("id") not in used_ids
+    ]
+
+    pool = fresh_results if fresh_results else allowed_results
+
     if not pool:
         return None
 
