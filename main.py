@@ -22,7 +22,9 @@ GIPHY_QUERIES = [
     #"fern frieren",
     #"stark frieren",
     "bolsonaro",
-    "lula",
+    #"lula",
+    "ciro gomes",
+    "renan santos",
 ]
 
 BLOCKED_GIPHY_TERMS = [
