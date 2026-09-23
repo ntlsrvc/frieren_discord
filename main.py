@@ -15,16 +15,12 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
 
 GIPHY_QUERIES = [
-    #"frieren beyond journey's end",
-    #"sousou no frieren",
-    #"frieren anime",
-    #"frieren",
-    #"fern frieren",
-    #"stark frieren",
-    "bolsonaro",
-    #"lula",
-    "ciro gomes",
-    "renan santos",
+    "frieren beyond journey's end",
+    "sousou no frieren",
+    "frieren anime",
+    "frieren",
+    "fern frieren",
+    "stark frieren",
 ]
 
 BLOCKED_GIPHY_TERMS = [
